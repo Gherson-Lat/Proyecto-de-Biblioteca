@@ -42,3 +42,10 @@ Módulo de Préstamos: http://localhost:8000/loans/vista
 
 Documentación interactiva (Swagger UI): http://localhost:8000/docs
 
+# Proyecto-de-Biblioteca
+Arquitectura modular, cada módulo es una unidad autónoma con sus propias dependencias.
+
+## 1. Clonar el repositorio
+```bash
+git clone [https://github.com/Gherson-Lat/Proyecto-de-Biblioteca.git](https://github.com/Gherson-Lat/Proyecto-de-Biblioteca.git)
+cd Proyecto-de-Biblioteca
