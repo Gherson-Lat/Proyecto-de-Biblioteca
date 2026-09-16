@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-# Asegúrate de mantener este import correcto apuntando a tu backend
 from sanciones_backend import GestorSanciones, Sancion
 
 class AplicacionSancionesProfesional(tk.Tk):
