@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from loans.router_loans import router as router_loans
 # from catalog.router_catalog import router as router_catalog
 # from students.router_students import router as router_students
-from penalty.router_penalty import router as router_penalty
+#from penalty.router_penalty import router as router_penalty
 # from reports.router_reports import router as router_reports
 
 app = FastAPI(
@@ -22,7 +22,7 @@ app = FastAPI(
 app.include_router(router_loans)
 # app.include_router(router_catalog)
 # app.include_router(router_students)
-app.include_router(router_penalty)
+#app.include_router(router_penalty)
 # app.include_router(router_reports)
 
 @app.get("/", response_class=HTMLResponse)

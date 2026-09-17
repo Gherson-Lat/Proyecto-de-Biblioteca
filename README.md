@@ -18,7 +18,6 @@ Pedro: git checkout dev/pedro
 
 Slopez: git checkout dev/slopez
 
-<<<<<<< HEAD
 Camilo: git checkout dev/camilo
 
 ## 🐳 Ejecución con Docker (Recomendado)
