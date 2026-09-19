@@ -2,77 +2,169 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Módulo de Préstamos y Devoluciones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Préstamos</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f4f9; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { color: #333; }
-        input[type="text"] { padding: 8px; width: 200px; margin-right: 10px; }
-        button { padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f6f9; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        .mensaje { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .exito { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        
+        /* Estilos para la tabla de préstamos */
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #007bff; color: white; }
+        .badge { background-color: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.85em; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>Registrar Nuevo Préstamo</h2>
-        <input type="text" id="estudiante_id" placeholder="ID Estudiante">
-        <input type="text" id="libro_id" placeholder="ID Libro">
-        <button onclick="registrarPrestamo()">Guardar Préstamo</button>
-        <p id="msg-registro" style="color: green;"></p>
-    </div>
+    <div class="container">
+        <div class="form-container">
+            <h2>Registrar Préstamo</h2>
+            
+            <div class="form-group">
+                <label for="estudiante_id">ID Estudiante:</label>
+                <input type="text" id="estudiante_id" placeholder="Ej: EST001">
+            </div>
 
-    <div class="card">
-        <h2>Préstamos Activos</h2>
-        <button onclick="cargarActivos()">Cargar / Actualizar Lista</button>
-        <table id="tabla-activos">
-            <thead>
-                <tr>
-                    <th>ID Préstamo</th>
-                    <th>Estudiante</th>
-                    <th>Libro</th>
-                    <th>Fecha Límite</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+            <div class="form-group">
+                <label for="libro_id">ID Libro:</label>
+                <input type="text" id="libro_id" placeholder="Ej: LIB001">
+            </div>
+
+            <button type="button" onclick="registrarPrestamo()">Registrar Préstamo</button>
+
+            <div id="mensaje_respuesta" class="mensaje"></div>
+        </div>
+
+        <!-- Tabla donde se muestran los préstamos guardados -->
+        <div class="form-container">
+            <h3>Préstamos Activos</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Estudiante</th>
+                        <th>Libro</th>
+                        <th>F. Préstamo</th>
+                        <th>F. Límite</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla_prestamos">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #777;">Cargando préstamos...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        async function registrarPrestamo() {
-            const estudiante = document.getElementById('estudiante_id').value;
-            const libro = document.getElementById('libro_id').value;
-            
-            const response = await fetch('/loans/api/registrar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estudiante_id: estudiante, libro_id: libro })
-            });
+        // Cargar la lista al iniciar la página
+        document.addEventListener("DOMContentLoaded", cargarPrestamosActivos);
 
-            const res = await response.json();
-            if(res.status === 'success') {
-                document.getElementById('msg-registro').innerText = `✅ Préstamo #${res.data.id_prestamo} guardado hasta ${res.data.fecha_limite}`;
-                cargarActivos();
+        async function registrarPrestamo() {
+            const estudianteInput = document.getElementById("estudiante_id");
+            const libroInput = document.getElementById("libro_id");
+
+            const estudiante_id = estudianteInput.value.trim();
+            const libro_id = libroInput.value.trim();
+
+            if (!estudiante_id || !libro_id) {
+                mostrarMensaje("Por favor, ingrese el ID del estudiante y del libro.", true);
+                return;
+            }
+
+            try {
+                const respuesta = await fetch("/loans/api/registrar", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ estudiante_id, libro_id })
+                });
+
+                const resultado = await respuesta.json();
+
+                const datos = resultado.data;
+
+                if (!respuesta.ok || datos.error) {
+                    mostrarMensaje(datos.mensaje || "No se pudo registrar el préstamo.", true);
+                } else {
+                    mostrarMensaje("Préstamo registrado correctamente.", false);
+                    estudianteInput.value = "";
+                    libroInput.value = "";
+                    // Actualizar la tabla inmediatamente con el nuevo registro
+                    cargarPrestamosActivos();
+                }
+            } catch (err) {
+                mostrarMensaje("Ocurrió un error al conectar con el servidor.", true);
             }
         }
 
-        async function cargarActivos() {
-            const response = await fetch('/loans/api/activos');
-            const data = await response.json();
-            const tbody = document.querySelector('#tabla-activos tbody');
-            tbody.innerHTML = '';
+        async function cargarPrestamosActivos() {
+            try {
+                const respuesta = await fetch("/loans/api/activos");
+                const datos = await respuesta.json();
+                const prestamos = datos.activos || [];
+                const tbody = document.getElementById("tabla_prestamos");
 
-            data.activos.forEach(p => {
-                tbody.innerHTML += `<tr>
-                    <td>${p.id_prestamo}</td>
-                    <td>${p.estudiante_id}</td>
-                    <td>${p.libro_id}</td>
-                    <td>${p.fecha_limite}</td>
-                </tr>`;
-            });
+                if (!prestamos || prestamos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">No hay préstamos activos registrados.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = prestamos.map(p => `
+                    <tr>
+                        <td><strong>#${p.id_prestamo}</strong></td>
+                        <td>${p.estudiante_id}</td>
+                        <td>${p.libro_id}</td>
+                        <td>${p.fecha_prestamo}</td>
+                        <td>${p.fecha_limite}</td>
+                        <td><span class="badge">${p.estado}</span></td>
+                        <td><button type="button" onclick="devolverPrestamo(${p.id_prestamo})">Devolver</button></td>
+                    </tr>
+                `).join("");
+            } catch (err) {
+                console.error("Error al obtener préstamos:", err);
+            }
+        }
+
+        async function devolverPrestamo(idPrestamo) {
+            try {
+                const respuesta = await fetch("/loans/api/devolver", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id_prestamo: idPrestamo })
+                });
+                const resultado = await respuesta.json();
+                const datos = resultado.data;
+
+                if (!respuesta.ok || datos.error) {
+                    mostrarMensaje(datos.mensaje || "No se pudo devolver el préstamo.", true);
+                    return;
+                }
+
+                mostrarMensaje(datos.mensaje, false);
+                await cargarPrestamosActivos();
+            } catch (err) {
+                mostrarMensaje("Ocurrió un error al conectar con el servidor.", true);
+            }
+        }
+
+        function mostrarMensaje(texto, esError) {
+            const divMensaje = document.getElementById("mensaje_respuesta");
+            divMensaje.innerText = texto;
+            divMensaje.style.display = "block";
+            divMensaje.className = "mensaje " + (esError ? "error" : "exito");
         }
     </script>
 </body>

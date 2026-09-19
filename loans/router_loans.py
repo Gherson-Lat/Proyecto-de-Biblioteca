@@ -4,7 +4,11 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import os
 
-from .backend_loans import registrar_prestamo_backend, obtener_prestamos_activos_backend
+from .backend_loans import (
+    devolver_prestamo_backend,
+    obtener_prestamos_activos_backend,
+    registrar_prestamo_backend,
+)
 
 router = APIRouter(prefix="/loans", tags=["Préstamos y Devoluciones"])
 
@@ -16,6 +20,9 @@ class PrestamoSchema(BaseModel):
     estudiante_id: str
     libro_id: str
 
+class DevolucionSchema(BaseModel):
+    id_prestamo: int
+
 # Vista web (Interfaz HTML)
 @router.get("/vista", response_class=HTMLResponse)
 def render_vista_loans(request: Request):
@@ -25,8 +32,13 @@ def render_vista_loans(request: Request):
 @router.post("/api/registrar")
 def api_registrar_prestamo(datos: PrestamoSchema):
     resultado = registrar_prestamo_backend(datos.estudiante_id, datos.libro_id)
-    return {"status": "success", "data": resultado}
+    return {"status": "error" if resultado.get("error") else "success", "data": resultado}
 
 @router.get("/api/activos")
 def api_obtener_activos():
     return {"activos": obtener_prestamos_activos_backend()}
+
+@router.post("/api/devolver")
+def api_devolver_prestamo(datos: DevolucionSchema):
+    resultado = devolver_prestamo_backend(datos.id_prestamo)
+    return {"status": "error" if resultado.get("error") else "success", "data": resultado}

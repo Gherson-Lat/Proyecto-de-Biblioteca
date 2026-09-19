@@ -36,7 +36,7 @@ Si prefieres no configurar un entorno virtual de Python ni instalar dependencias
 
 ### Acceder a la aplicación:
 
-Dashboard Principal: http://localhost:8000
+Dashboard Principal: http://localhost:8000/docs
 
 Módulo de Préstamos: http://localhost:8000/loans/vista
 
