@@ -2,170 +2,130 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Préstamos</title>
+    <title>{% if editing_loan %}Editar Préstamo{% else %}Gestión de Préstamos{% endif %}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f6f9; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
-        button:hover { background-color: #0056b3; }
-        .mensaje { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .exito { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        
-        /* Estilos para la tabla de préstamos */
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #007bff; color: white; }
-        .badge { background-color: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.85em; }
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #eef2f5; }
+        .card { background: white; padding: 25px; border-radius: 10px; max-width: 1100px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-small { max-width: 500px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #6f42c1; color: white; }
+        input, select, button { padding: 8px; margin: 4px; border-radius: 4px; border: 1px solid #ccc; }
+        button { border: none; cursor: pointer; border-radius: 4px; }
+        .btn-save { background-color: #28a745; color: white; }
+        .btn-return { background-color: #17a2b8; color: white; font-size: 12px; padding: 6px 10px; }
+        .btn-edit { background-color: #ffc107; padding: 6px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; color: black; display: inline-block; }
+        .btn-delete { background-color: #dc3545; font-size: 12px; padding: 6px 10px; color: white; }
+        a { text-decoration: none; color: #007bff; font-weight: bold; }
+        form.edit-form input { width: 95%; }
+        form.edit-form a.cancel { text-decoration: none; color: #6c757d; margin-left: 10px; font-weight: normal; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="form-container">
-            <h2>Registrar Préstamo</h2>
-            
-            <div class="form-group">
-                <label for="estudiante_id">ID Estudiante:</label>
-                <input type="text" id="estudiante_id" placeholder="Ej: EST001">
-            </div>
-
-            <div class="form-group">
-                <label for="libro_id">ID Libro:</label>
-                <input type="text" id="libro_id" placeholder="Ej: LIB001">
-            </div>
-
-            <button type="button" onclick="registrarPrestamo()">Registrar Préstamo</button>
-
-            <div id="mensaje_respuesta" class="mensaje"></div>
-        </div>
-
-        <!-- Tabla donde se muestran los préstamos guardados -->
-        <div class="form-container">
-            <h3>Préstamos Activos</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Estudiante</th>
-                        <th>Libro</th>
-                        <th>F. Préstamo</th>
-                        <th>F. Límite</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla_prestamos">
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: #777;">Cargando préstamos...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+{% if editing_loan %}
+    <!-- ===================== MODO EDICIÓN ===================== -->
+    <div class="card card-small">
+        <h2>✏️ Editar Préstamo #{{ editing_loan.id }}</h2>
+        <p><strong>Libro:</strong> {{ editing_loan.book_title }}</p>
+        <form class="edit-form" method="post" action="/loans/{{ editing_loan.id }}/edit">
+            <label>Prestatario:</label>
+            <input type="text" name="borrower_name" value="{{ editing_loan.borrower_name }}" required>
+            <label>Documento:</label>
+            <input type="text" name="borrower_document" value="{{ editing_loan.borrower_document }}" required>
+            <label>Fecha de vencimiento:</label>
+            <input type="date" name="due_date" value="{{ editing_loan.due_date }}" required>
+            <br><br>
+            <button type="submit" class="btn-save">Guardar Cambios</button>
+            <a class="cancel" href="/loans/vista">Cancelar</a>
+        </form>
     </div>
 
-    <script>
-        // Cargar la lista al iniciar la página
-        document.addEventListener("DOMContentLoaded", cargarPrestamosActivos);
+{% else %}
+    <!-- ===================== MODO LISTADO ===================== -->
+    <div class="card">
+        <a href="/catalog/vista">⬅ Volver al Catálogo</a>
+        <h1>📑 Gestión de Préstamos</h1>
 
-        async function registrarPrestamo() {
-            const estudianteInput = document.getElementById("estudiante_id");
-            const libroInput = document.getElementById("libro_id");
+        <form method="get" action="/loans/vista">
+            <input type="text" name="search" placeholder="Buscar por libro, prestatario o documento..." value="{{ search }}" style="width: 60%;">
+            <button type="submit" style="background-color: #007bff; color: white;">Buscar</button>
+            <a href="/loans/vista" style="margin-left: 10px; font-weight: normal; font-size: 14px;">Limpiar búsqueda</a>
+        </form>
 
-            const estudiante_id = estudianteInput.value.trim();
-            const libro_id = libroInput.value.trim();
+        <hr>
 
-            if (!estudiante_id || !libro_id) {
-                mostrarMensaje("Por favor, ingrese el ID del estudiante y del libro.", true);
-                return;
-            }
+        <h3>➕ Registrar Nuevo Préstamo</h3>
+        {% if available_books %}
+        <form method="post" action="/loans/records">
+            <select name="book_id" required>
+                <option value="" disabled selected>Selecciona un libro disponible</option>
+                {% for b in available_books %}
+                <option value="{{ b.id }}">{{ b.title }} — {{ b.author }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="borrower_name" placeholder="Nombre del prestatario" required>
+            <input type="text" name="borrower_document" placeholder="Documento" required>
+            <input type="date" name="due_date" min="{{ today }}" required>
+            <button type="submit" class="btn-save">Registrar Préstamo</button>
+        </form>
+        {% else %}
+        <p style="color:#6c757d;">No hay libros disponibles para prestar en este momento.</p>
+        {% endif %}
 
-            try {
-                const respuesta = await fetch("/loans/api/registrar", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ estudiante_id, libro_id })
-                });
+        <h3>📋 Préstamos Registrados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Libro</th>
+                    <th>Prestatario</th>
+                    <th>Documento</th>
+                    <th>Fecha Préstamo</th>
+                    <th>Vencimiento</th>
+                    <th>Devolución</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in loans %}
+                <tr>
+                    <td>{{ l.id }}</td>
+                    <td>{{ l.book_title }}</td>
+                    <td>{{ l.borrower_name }}</td>
+                    <td>{{ l.borrower_document }}</td>
+                    <td>{{ l.loan_date }}</td>
+                    <td>{{ l.due_date }}</td>
+                    <td>{{ l.return_date or "—" }}</td>
+                    <td>
+                        {% if l.status == "Devuelto" %}
+                            ✅ Devuelto
+                        {% elif l.due_date < today %}
+                            🔴 Vencido
+                        {% else %}
+                            🟡 Activo
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if l.status == "Activo" %}
+                        <form method="post" action="/loans/{{ l.id }}/return" style="display:inline;">
+                            <button type="submit" class="btn-return">Marcar Devuelto</button>
+                        </form>
+                        <a href="/loans/edit/{{ l.id }}" class="btn-edit" title="Editar">✏️</a>
+                        {% endif %}
+                        <form method="post" action="/loans/{{ l.id }}/delete" style="display:inline;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('¿Eliminar este préstamo?');" title="Eliminar">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" style="text-align:center;">No se encontraron préstamos</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
 
-                const resultado = await respuesta.json();
-
-                const datos = resultado.data;
-
-                if (!respuesta.ok || datos.error) {
-                    mostrarMensaje(datos.mensaje || "No se pudo registrar el préstamo.", true);
-                } else {
-                    mostrarMensaje("Préstamo registrado correctamente.", false);
-                    estudianteInput.value = "";
-                    libroInput.value = "";
-                    // Actualizar la tabla inmediatamente con el nuevo registro
-                    cargarPrestamosActivos();
-                }
-            } catch (err) {
-                mostrarMensaje("Ocurrió un error al conectar con el servidor.", true);
-            }
-        }
-
-        async function cargarPrestamosActivos() {
-            try {
-                const respuesta = await fetch("/loans/api/activos");
-                const datos = await respuesta.json();
-                const prestamos = datos.activos || [];
-                const tbody = document.getElementById("tabla_prestamos");
-
-                if (!prestamos || prestamos.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">No hay préstamos activos registrados.</td></tr>`;
-                    return;
-                }
-
-                tbody.innerHTML = prestamos.map(p => `
-                    <tr>
-                        <td><strong>#${p.id_prestamo}</strong></td>
-                        <td>${p.estudiante_id}</td>
-                        <td>${p.libro_id}</td>
-                        <td>${p.fecha_prestamo}</td>
-                        <td>${p.fecha_limite}</td>
-                        <td><span class="badge">${p.estado}</span></td>
-                        <td><button type="button" onclick="devolverPrestamo(${p.id_prestamo})">Devolver</button></td>
-                    </tr>
-                `).join("");
-            } catch (err) {
-                console.error("Error al obtener préstamos:", err);
-            }
-        }
-
-        async function devolverPrestamo(idPrestamo) {
-            try {
-                const respuesta = await fetch("/loans/api/devolver", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id_prestamo: idPrestamo })
-                });
-                const resultado = await respuesta.json();
-                const datos = resultado.data;
-
-                if (!respuesta.ok || datos.error) {
-                    mostrarMensaje(datos.mensaje || "No se pudo devolver el préstamo.", true);
-                    return;
-                }
-
-                mostrarMensaje(datos.mensaje, false);
-                await cargarPrestamosActivos();
-            } catch (err) {
-                mostrarMensaje("Ocurrió un error al conectar con el servidor.", true);
-            }
-        }
-
-        function mostrarMensaje(texto, esError) {
-            const divMensaje = document.getElementById("mensaje_respuesta");
-            divMensaje.innerText = texto;
-            divMensaje.style.display = "block";
-            divMensaje.className = "mensaje " + (esError ? "error" : "exito");
-        }
-    </script>
 </body>
 </html>
