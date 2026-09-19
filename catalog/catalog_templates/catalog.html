@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if mode == "edit" %}Editar Libro{% else %}Catálogo de Libros{% endif %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #eef2f5; }
+        .card { background: white; padding: 25px; border-radius: 10px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-main { max-width: 1000px; }
+        .card-edit { max-width: 500px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        input, button { padding: 8px; margin: 4px; border-radius: 4px; border: 1px solid #ccc; }
+        .input-full { width: 95%; padding: 10px; margin: 8px 0; }
+        button { border: none; cursor: pointer; }
+        .btn-save { background-color: #28a745; color: white; }
+        .btn-primary { background-color: #007bff; color: white; padding: 10px 15px; }
+        .btn-toggle-available { background-color: #ffc107; color: #000; font-size: 12px; padding: 6px 10px; }
+        .btn-toggle-borrowed { background-color: #17a2b8; color: #fff; font-size: 12px; padding: 6px 10px; }
+        .btn-edit { background-color: #ffc107; padding: 6px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; color: black; display: inline-block; }
+        .btn-delete { background-color: #dc3545; font-size: 12px; padding: 6px 10px; color: white; }
+        a { text-decoration: none; color: #007bff; font-weight: bold; }
+        .btn-cancel { color: #6c757d; margin-left: 10px; font-weight: normal; }
+    </style>
+</head>
+<body>
+
+{% if mode == "edit" %}
+    <!-- VISTA DE EDICIÓN -->
+    <div class="card card-edit">
+        <h2>✏️ Editar Libro #{{ book.id }}</h2>
+        <form method="post" action="/catalog/books/{{ book.id }}/edit">
+            <label>Título:</label>
+            <input type="text" name="title" value="{{ book.title }}" class="input-full" required>
+            <label>Autor:</label>
+            <input type="text" name="author" value="{{ book.author }}" class="input-full" required>
+            <label>Categoría:</label>
+            <input type="text" name="category" value="{{ book.category }}" class="input-full" required>
+            <label>ISBN:</label>
+            <input type="text" name="isbn" value="{{ book.isbn }}" class="input-full" required>
+            <br><br>
+            <button type="submit" class="btn-primary">Guardar Cambios</button>
+            <a href="/catalog/vista" class="btn-cancel">Cancelar</a>
+        </form>
+    </div>
+
+{% else %}
+    <!-- VISTA PRINCIPAL DEL CATÁLOGO -->
+    <div class="card card-main">
+        <a href="/">⬅ Volver al Dashboard Principal</a>
+        <h1>📖 Gestión de Catálogo de Libros</h1>
+        
+        <form method="get" action="/catalog/vista">
+            <input type="text" name="search" placeholder="Buscar por título, autor o categoría..." value="{{ search or '' }}" style="width: 60%;">
+            <button type="submit" style="background-color: #007bff; color: white;">Buscar</button>
+            <a href="/catalog/vista" style="margin-left: 10px; font-weight: normal; font-size: 14px;">Limpiar búsqueda</a>
+        </form>
+        
+        <hr>
+        
+        <h3>➕ Registrar Nuevo Libro</h3>
+        <form method="post" action="/catalog/books">
+            <input type="text" name="title" placeholder="Título" required>
+            <input type="text" name="author" placeholder="Autor" required>
+            <input type="text" name="category" placeholder="Categoría" required>
+            <input type="text" name="isbn" placeholder="ISBN" required>
+            <button type="submit" class="btn-save">Guardar Libro</button>
+        </form>
+
+        <h3>📚 Inventario de Libros</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Autor</th>
+                    <th>Categoría</th>
+                    <th>ISBN</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in books %}
+                <tr>
+                    <td>{{ b.id }}</td>
+                    <td>{{ b.title }}</td>
+                    <td>{{ b.author }}</td>
+                    <td>{{ b.category }}</td>
+                    <td>{{ b.isbn }}</td>
+                    <td>
+                        {% if b.available %}
+                            🟢 Disponible
+                        {% else %}
+                            🔴 Prestado
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="/catalog/books/{{ b.id }}/toggle-status" style="display:inline;">
+                            <button type="submit" class="{% if b.available %}btn-toggle-available{% else %}btn-toggle-borrowed{% endif %}">
+                                {% if b.available %}Cambiar a Prestado{% else %}Cambiar a Disponible{% endif %}
+                            </button>
+                        </form>
+                        <a href="/catalog/edit/{{ b.id }}" class="btn-edit" title="Editar">✏️</a>
+                        <form method="post" action="/catalog/books/{{ b.id }}/delete" style="display:inline;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('¿Eliminar este libro?');" title="Eliminar">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center;">No se encontraron libros</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+</body>
+</html>

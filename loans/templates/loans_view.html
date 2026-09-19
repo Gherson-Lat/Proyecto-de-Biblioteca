@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if editing_loan %}Editar Préstamo{% else %}Gestión de Préstamos{% endif %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #eef2f5; }
+        .card { background: white; padding: 25px; border-radius: 10px; max-width: 1100px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-small { max-width: 500px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #6f42c1; color: white; }
+        input, select, button { padding: 8px; margin: 4px; border-radius: 4px; border: 1px solid #ccc; }
+        button { border: none; cursor: pointer; border-radius: 4px; }
+        .btn-save { background-color: #28a745; color: white; }
+        .btn-return { background-color: #17a2b8; color: white; font-size: 12px; padding: 6px 10px; }
+        .btn-edit { background-color: #ffc107; padding: 6px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; color: black; display: inline-block; }
+        .btn-delete { background-color: #dc3545; font-size: 12px; padding: 6px 10px; color: white; }
+        a { text-decoration: none; color: #007bff; font-weight: bold; }
+        form.edit-form input { width: 95%; }
+        form.edit-form a.cancel { text-decoration: none; color: #6c757d; margin-left: 10px; font-weight: normal; }
+    </style>
+</head>
+<body>
+
+{% if editing_loan %}
+    <!-- ===================== MODO EDICIÓN ===================== -->
+    <div class="card card-small">
+        <h2>✏️ Editar Préstamo #{{ editing_loan.id }}</h2>
+        <p><strong>Libro:</strong> {{ editing_loan.book_title }}</p>
+        <form class="edit-form" method="post" action="/loans/{{ editing_loan.id }}/edit">
+            <label>Prestatario:</label>
+            <input type="text" name="borrower_name" value="{{ editing_loan.borrower_name }}" required>
+            <label>Documento:</label>
+            <input type="text" name="borrower_document" value="{{ editing_loan.borrower_document }}" required>
+            <label>Fecha de vencimiento:</label>
+            <input type="date" name="due_date" value="{{ editing_loan.due_date }}" required>
+            <br><br>
+            <button type="submit" class="btn-save">Guardar Cambios</button>
+            <a class="cancel" href="/loans/vista">Cancelar</a>
+        </form>
+    </div>
+
+{% else %}
+    <!-- ===================== MODO LISTADO ===================== -->
+    <div class="card">
+        <a href="/catalog/vista">⬅ Volver al Catálogo</a>
+        <h1>📑 Gestión de Préstamos</h1>
+
+        <form method="get" action="/loans/vista">
+            <input type="text" name="search" placeholder="Buscar por libro, prestatario o documento..." value="{{ search }}" style="width: 60%;">
+            <button type="submit" style="background-color: #007bff; color: white;">Buscar</button>
+            <a href="/loans/vista" style="margin-left: 10px; font-weight: normal; font-size: 14px;">Limpiar búsqueda</a>
+        </form>
+
+        <hr>
+
+        <h3>➕ Registrar Nuevo Préstamo</h3>
+        {% if available_books %}
+        <form method="post" action="/loans/records">
+            <select name="book_id" required>
+                <option value="" disabled selected>Selecciona un libro disponible</option>
+                {% for b in available_books %}
+                <option value="{{ b.id }}">{{ b.title }} — {{ b.author }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="borrower_name" placeholder="Nombre del prestatario" required>
+            <input type="text" name="borrower_document" placeholder="Documento" required>
+            <input type="date" name="due_date" min="{{ today }}" required>
+            <button type="submit" class="btn-save">Registrar Préstamo</button>
+        </form>
+        {% else %}
+        <p style="color:#6c757d;">No hay libros disponibles para prestar en este momento.</p>
+        {% endif %}
+
+        <h3>📋 Préstamos Registrados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Libro</th>
+                    <th>Prestatario</th>
+                    <th>Documento</th>
+                    <th>Fecha Préstamo</th>
+                    <th>Vencimiento</th>
+                    <th>Devolución</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in loans %}
+                <tr>
+                    <td>{{ l.id }}</td>
+                    <td>{{ l.book_title }}</td>
+                    <td>{{ l.borrower_name }}</td>
+                    <td>{{ l.borrower_document }}</td>
+                    <td>{{ l.loan_date }}</td>
+                    <td>{{ l.due_date }}</td>
+                    <td>{{ l.return_date or "—" }}</td>
+                    <td>
+                        {% if l.status == "Devuelto" %}
+                            ✅ Devuelto
+                        {% elif l.due_date < today %}
+                            🔴 Vencido
+                        {% else %}
+                            🟡 Activo
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if l.status == "Activo" %}
+                        <form method="post" action="/loans/{{ l.id }}/return" style="display:inline;">
+                            <button type="submit" class="btn-return">Marcar Devuelto</button>
+                        </form>
+                        <a href="/loans/edit/{{ l.id }}" class="btn-edit" title="Editar">✏️</a>
+                        {% endif %}
+                        <form method="post" action="/loans/{{ l.id }}/delete" style="display:inline;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('¿Eliminar este préstamo?');" title="Eliminar">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" style="text-align:center;">No se encontraron préstamos</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+</body>
+</html>
