@@ -7,10 +7,10 @@ from fastapi.responses import HTMLResponse
 # Importación de los routers de cada módulo
 # (Cada integrante exporta su APIRouter desde su carpeta)
 from loans.router_loans import router as router_loans
-from catalog.router_catalog import router as router_catalog
-#from students.router_students import router as router_students
-#from penalty.router_penalty import router as router_penalty
-#from reports.router_reports import router as router_reports
+from catalog.routers_catalog import router as router_catalog
+# from students.router_students import router as router_students
+# from penalty.router_penalty import router as router_penalty
+# from reports.router_reports import router as router_reports
 
 app = FastAPI(
     title="Sistema de Gestión Bibliotecaria",
@@ -18,12 +18,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
-#Integración de los routers al tablero central
+# Integración de los routers al tablero central
 app.include_router(router_loans)
 app.include_router(router_catalog)
-#app.include_router(router_students)
-#app.include_router(router_penalty)
-#app.include_router(router_reports)
+# app.include_router(router_students)
+# app.include_router(router_penalty)
+# app.include_router(router_reports)
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard_principal():
@@ -52,7 +52,7 @@ def dashboard_principal():
             </div>
             <div class="card">
                 <h3>Catálogo</h3>
-                <a href="/catalog/vista">Ir al Catálogo ➔</a>
+                <a href="/catalog/vista">Ir a Catálogo ➔</a>
             </div>
             <div class="card">
                 <h3>Estudiantes</h3>
