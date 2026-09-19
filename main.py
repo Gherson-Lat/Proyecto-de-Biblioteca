@@ -4,13 +4,12 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-
 # Importación de los routers de cada módulo
 # (Cada integrante exporta su APIRouter desde su carpeta)
 from loans.router_loans import router as router_loans
-from catalog.catalog import router as router_catalog
+# from catalog.router_catalog import router as router_catalog
 # from students.router_students import router as router_students
-# from penalty.router_penalty import router as router_penalty
+#from penalty.router_penalty import router as router_penalty
 # from reports.router_reports import router as router_reports
 
 app = FastAPI(
@@ -21,9 +20,9 @@ app = FastAPI(
 
 # Integración de los routers al tablero central
 app.include_router(router_loans)
-app.include_router(router_catalog)
+# app.include_router(router_catalog)
 # app.include_router(router_students)
-# app.include_router(router_penalty)
+#app.include_router(router_penalty)
 # app.include_router(router_reports)
 
 @app.get("/", response_class=HTMLResponse)
