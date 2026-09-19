@@ -13,11 +13,10 @@ app = FastAPI(
 
 app.include_router(router_loans)
 app.include_router(router_catalog)
-app.include_router(reservations_router, prefix="/reservations", tags=["Reservas"])
+app.include_router(reservations_router)
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard_principal():
-    """Página de inicio global (Dashboard) que enlaza a los submódulos."""
     return """
     <!DOCTYPE html>
     <html lang="es">
@@ -46,7 +45,7 @@ def dashboard_principal():
             </div>
             <div class="card">
                 <h3>Reservas</h3>
-                <a href="/docs">Ir a API Reservas ➔</a>
+                <a href="/reservations/vista">Ir a Reservas ➔</a>
             </div>
             <div class="card">
                 <h3>Estudiantes</h3>
