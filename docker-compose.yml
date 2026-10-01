@@ -5,7 +5,7 @@ services:
     build: .
     container_name: biblioteca_app
     ports:
-      - "8000:8000"
+      - "8082:8000"
     volumes:
       # Monta el código local dentro del contenedor.
       # ¡Cualquier cambio que hagan tus devs en el código se reflejará al instante sin reiniciar Docker!
