@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if mode == "edit" %}Editar Sanción{% else %}Gestión de Sanciones{% endif %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #eef2f5; }
+        .card { background: white; padding: 25px; border-radius: 10px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-main { max-width: 1000px; }
+        .card-edit { max-width: 500px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        input, button { padding: 8px; margin: 4px; border-radius: 4px; border: 1px solid #ccc; }
+        .input-full { width: 95%; padding: 10px; margin: 8px 0; }
+        button { border: none; cursor: pointer; }
+        .btn-save { background-color: #28a745; color: white; }
+        .btn-primary { background-color: #007bff; color: white; padding: 10px 15px; }
+        .btn-toggle-unresolved { background-color: #28a745; color: #fff; font-size: 12px; padding: 6px 10px; }
+        .btn-toggle-resolved { background-color: #ffc107; color: #000; font-size: 12px; padding: 6px 10px; }
+        .btn-edit { background-color: #ffc107; padding: 6px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; color: black; display: inline-block; }
+        .btn-delete { background-color: #dc3545; font-size: 12px; padding: 6px 10px; color: white; }
+        a { text-decoration: none; color: #007bff; font-weight: bold; }
+        .btn-cancel { color: #6c757d; margin-left: 10px; font-weight: normal; }
+    </style>
+</head>
+<body>
+
+{% if mode == "edit" %}
+    <div class="card card-edit">
+        <h2>✏️ Editar Sanción #{{ penalty.id }}</h2>
+        <form method="post" action="/penalty/penalties/{{ penalty.id }}/edit">
+            <label>ID Estudiante:</label>
+            <input type="number" name="estudiante_id" value="{{ penalty.estudiante_id }}" class="input-full" required>
+            <label>Motivo:</label>
+            <input type="text" name="motivo" value="{{ penalty.motivo }}" class="input-full" required>
+            <label>Monto ($):</label>
+            <input type="number" step="0.01" name="monto" value="{{ penalty.monto }}" class="input-full" required>
+            <br><br>
+            <button type="submit" class="btn-primary">Guardar Cambios</button>
+            <a href="/penalty/vista" class="btn-cancel">Cancelar</a>
+        </form>
+    </div>
+
+{% else %}
+    <div class="card card-main">
+        <a href="/">⬅ Volver al Dashboard Principal</a>
+        <h1>⚠️ Gestión de Sanciones</h1>
+        
+        <form method="get" action="/penalty/vista">
+            <input type="text" name="search" placeholder="Buscar por ID estudiante o motivo..." value="{{ search or '' }}" style="width: 60%;">
+            <button type="submit" style="background-color: #007bff; color: white;">Buscar</button>
+            <a href="/penalty/vista" style="margin-left: 10px; font-weight: normal; font-size: 14px;">Limpiar búsqueda</a>
+        </form>
+        
+        <hr>
+        
+        <h3>➕ Registrar Nueva Sanción</h3>
+        <form method="post" action="/penalty/penalties">
+            <input type="number" name="estudiante_id" placeholder="ID Estudiante" required>
+            <input type="text" name="motivo" placeholder="Motivo de la sanción" required>
+            <input type="number" step="0.01" name="monto" placeholder="Monto ($)" required>
+            <button type="submit" class="btn-save">Guardar Sanción</button>
+        </form>
+
+        <h3>📜 Historial de Sanciones</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ID Estudiante</th>
+                    <th>Motivo</th>
+                    <th>Monto ($)</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in penalties %}
+                <tr>
+                    <td>{{ p.id }}</td>
+                    <td>{{ p.estudiante_id }}</td>
+                    <td>{{ p.motivo }}</td>
+                    <td>${{ "%.2f"|format(p.monto) }}</td>
+                    <td>
+                        {% if p.resuelta %}
+                            🟢 Resuelta
+                        {% else %}
+                            🔴 Pendiente
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="/penalty/penalties/{{ p.id }}/toggle-status" style="display:inline;">
+                            <button type="submit" class="{% if p.resuelta %}btn-toggle-resolved{% else %}btn-toggle-unresolved{% endif %}">
+                                {% if p.resuelta %}Marcar Pendiente{% else %}Marcar Resuelta{% endif %}
+                            </button>
+                        </form>
+                        <a href="/penalty/edit/{{ p.id }}" class="btn-edit" title="Editar">✏️</a>
+                        <form method="post" action="/penalty/penalties/{{ p.id }}/delete" style="display:inline;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('¿Eliminar esta sanción?');" title="Eliminar">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align:center;">No se encontraron sanciones</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if mode == "edit" %}Editar Reporte{% else %}Gestión de Reportes{% endif %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #eef2f5; }
+        .card { background: white; padding: 25px; border-radius: 10px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-main { max-width: 1000px; }
+        .card-edit { max-width: 500px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        input, button { padding: 8px; margin: 4px; border-radius: 4px; border: 1px solid #ccc; }
+        .input-full { width: 95%; padding: 10px; margin: 8px 0; }
+        button { border: none; cursor: pointer; }
+        .btn-save { background-color: #28a745; color: white; }
+        .btn-primary { background-color: #007bff; color: white; padding: 10px 15px; }
+        .btn-toggle-active { background-color: #17a2b8; color: #fff; font-size: 12px; padding: 6px 10px; }
+        .btn-toggle-archived { background-color: #ffc107; color: #000; font-size: 12px; padding: 6px 10px; }
+        .btn-edit { background-color: #ffc107; padding: 6px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; color: black; display: inline-block; }
+        .btn-delete { background-color: #dc3545; font-size: 12px; padding: 6px 10px; color: white; }
+        a { text-decoration: none; color: #007bff; font-weight: bold; }
+        .btn-cancel { color: #6c757d; margin-left: 10px; font-weight: normal; }
+    </style>
+</head>
+<body>
+
+{% if mode == "edit" %}
+    <div class="card card-edit">
+        <h2>✏️ Editar Reporte #{{ report.id }}</h2>
+        <form method="post" action="/reports/reports/{{ report.id }}/edit">
+            <label>Título:</label>
+            <input type="text" name="titulo" value="{{ report.titulo }}" class="input-full" required>
+            <label>Categoría:</label>
+            <input type="text" name="categoria" value="{{ report.categoria }}" class="input-full" required>
+            <label>Generado Por:</label>
+            <input type="text" name="generado_por" value="{{ report.generado_por }}" class="input-full" required>
+            <br><br>
+            <button type="submit" class="btn-primary">Guardar Cambios</button>
+            <a href="/reports/vista" class="btn-cancel">Cancelar</a>
+        </form>
+    </div>
+
+{% else %}
+    <div class="card card-main">
+        <a href="/">⬅ Volver al Dashboard Principal</a>
+        <h1>📊 Gestión de Reportes</h1>
+        
+        <form method="get" action="/reports/vista">
+            <input type="text" name="search" placeholder="Buscar por título, categoría o autor..." value="{{ search or '' }}" style="width: 60%;">
+            <button type="submit" style="background-color: #007bff; color: white;">Buscar</button>
+            <a href="/reports/vista" style="margin-left: 10px; font-weight: normal; font-size: 14px;">Limpiar búsqueda</a>
+        </form>
+        
+        <hr>
+        
+        <h3>➕ Generar Nuevo Reporte</h3>
+        <form method="post" action="/reports/reports">
+            <input type="text" name="titulo" placeholder="Título del reporte" required>
+            <input type="text" name="categoria" placeholder="Categoría" required>
+            <input type="text" name="generado_por" placeholder="Generado por" required>
+            <button type="submit" class="btn-save">Guardar Reporte</button>
+        </form>
+
+        <h3>📁 Centro de Reportes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Categoría</th>
+                    <th>Generado Por</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr>
+                    <td>{{ r.id }}</td>
+                    <td>{{ r.titulo }}</td>
+                    <td>{{ r.categoria }}</td>
+                    <td>{{ r.generado_por }}</td>
+                    <td>
+                        {% if r.archivado %}
+                            📦 Archivado
+                        {% else %}
+                            🟢 Activo
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="/reports/reports/{{ r.id }}/toggle-status" style="display:inline;">
+                            <button type="submit" class="{% if r.archivado %}btn-toggle-archived{% else %}btn-toggle-active{% endif %}">
+                                {% if r.archivado %}Desarchivar{% else %}Archivar{% endif %}
+                            </button>
+                        </form>
+                        <a href="/reports/edit/{{ r.id }}" class="btn-edit" title="Editar">✏️</a>
+                        <form method="post" action="/reports/reports/{{ r.id }}/delete" style="display:inline;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('¿Eliminar este reporte?');" title="Eliminar">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align:center;">No se encontraron reportes</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+</body>
+</html>

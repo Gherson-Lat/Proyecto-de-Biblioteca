@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if mode == "edit" %}Editar Estudiante{% else %}Gestión de Estudiantes{% endif %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #eef2f5; }
+        .card { background: white; padding: 25px; border-radius: 10px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-main { max-width: 1000px; }
+        .card-edit { max-width: 500px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        input, button { padding: 8px; margin: 4px; border-radius: 4px; border: 1px solid #ccc; }
+        .input-full { width: 95%; padding: 10px; margin: 8px 0; }
+        button { border: none; cursor: pointer; }
+        .btn-save { background-color: #28a745; color: white; }
+        .btn-primary { background-color: #007bff; color: white; padding: 10px 15px; }
+        .btn-toggle-active { background-color: #ffc107; color: #000; font-size: 12px; padding: 6px 10px; }
+        .btn-toggle-inactive { background-color: #17a2b8; color: #fff; font-size: 12px; padding: 6px 10px; }
+        .btn-edit { background-color: #ffc107; padding: 6px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; color: black; display: inline-block; }
+        .btn-delete { background-color: #dc3545; font-size: 12px; padding: 6px 10px; color: white; }
+        a { text-decoration: none; color: #007bff; font-weight: bold; }
+        .btn-cancel { color: #6c757d; margin-left: 10px; font-weight: normal; }
+    </style>
+</head>
+<body>
+
+{% if mode == "edit" %}
+    <div class="card card-edit">
+        <h2>✏️ Editar Estudiante #{{ student.id }}</h2>
+        <form method="post" action="/students/students/{{ student.id }}/edit">
+            <label>Nombre Completo:</label>
+            <input type="text" name="nombre" value="{{ student.nombre }}" class="input-full" required>
+            <label>Carrera:</label>
+            <input type="text" name="carrera" value="{{ student.carrera }}" class="input-full" required>
+            <label>Email:</label>
+            <input type="email" name="email" value="{{ student.email }}" class="input-full" required>
+            <br><br>
+            <button type="submit" class="btn-primary">Guardar Cambios</button>
+            <a href="/students/vista" class="btn-cancel">Cancelar</a>
+        </form>
+    </div>
+
+{% else %}
+    <div class="card card-main">
+        <a href="/">⬅ Volver al Dashboard Principal</a>
+        <h1>👨‍🎓 Gestión de Estudiantes</h1>
+        
+        <form method="get" action="/students/vista">
+            <input type="text" name="search" placeholder="Buscar por nombre, carrera o email..." value="{{ search or '' }}" style="width: 60%;">
+            <button type="submit" style="background-color: #007bff; color: white;">Buscar</button>
+            <a href="/students/vista" style="margin-left: 10px; font-weight: normal; font-size: 14px;">Limpiar búsqueda</a>
+        </form>
+        
+        <hr>
+        
+        <h3>➕ Registrar Nuevo Estudiante</h3>
+        <form method="post" action="/students/students">
+            <input type="text" name="nombre" placeholder="Nombre completo" required>
+            <input type="text" name="carrera" placeholder="Carrera" required>
+            <input type="email" name="email" placeholder="Correo electrónico" required>
+            <button type="submit" class="btn-save">Guardar Estudiante</button>
+        </form>
+
+        <h3>📋 Listado de Estudiantes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Carrera</th>
+                    <th>Email</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td>{{ s.id }}</td>
+                    <td>{{ s.nombre }}</td>
+                    <td>{{ s.carrera }}</td>
+                    <td>{{ s.email }}</td>
+                    <td>
+                        {% if s.activo %}
+                            🟢 Activo
+                        {% else %}
+                            🔴 Inactivo
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="/students/students/{{ s.id }}/toggle-status" style="display:inline;">
+                            <button type="submit" class="{% if s.activo %}btn-toggle-active{% else %}btn-toggle-inactive{% endif %}">
+                                {% if s.activo %}Desactivar{% else %}Activar{% endif %}
+                            </button>
+                        </form>
+                        <a href="/students/edit/{{ s.id }}" class="btn-edit" title="Editar">✏️</a>
+                        <form method="post" action="/students/students/{{ s.id }}/delete" style="display:inline;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('¿Eliminar este estudiante?');" title="Eliminar">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align:center;">No se encontraron estudiantes</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+</body>
+</html>
